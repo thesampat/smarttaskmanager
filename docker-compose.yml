@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    develop:
+      watch:
+        - action: restart
+          path: ./backend
+          target: /app
+          ignore:
+            - node_modules
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+          ignore:
+            - node_modules
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./data/mongodb:/data/db
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6087:6379"
